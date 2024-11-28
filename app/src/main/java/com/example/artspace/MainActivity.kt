@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -80,8 +81,41 @@ fun foo() {
 
 }
 
+data class Artwork(val imageResId: Int, val title: String, val artist: String, val year: Int)
+
+@Composable
+fun LandscapeLayout(
+    artworks: List<Artwork>,
+    currentIndex: Int,
+    onIndexChange: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Изображение и кнопки рядом друг с другом в альбомном режиме
+        DisplayArtwork(
+            artwork = artworks[currentIndex],
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)  // 50% ширины экрана
+        )
+
+        NavigationButtons(
+            artworks = artworks,
+            currentIndex = currentIndex,
+            onIndexChange = onIndexChange,
+            modifier = Modifier.weight(1f)  // 50% ширины экрана
+        )
+    }
+}
+
 @Composable
 fun DisplayArtwork(
+    artwork: Artwork,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -120,6 +154,9 @@ fun DisplayArtwork(
 
 @Composable
 fun NavigationButtons(
+    artworks: List<Artwork>,
+    currentIndex: Int,
+    onIndexChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
