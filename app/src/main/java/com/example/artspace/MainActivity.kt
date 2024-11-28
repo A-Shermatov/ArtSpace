@@ -1,5 +1,6 @@
 package com.example.artspace
 
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,13 +20,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,49 +47,75 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ArtSpaceTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ArtSpaceApp()
                 }
             }
         }
     }
 }
 
-@Composable
-fun ArtSpaceApp(modifier: Modifier = Modifier) {
-    Box (modifier = modifier){
-        Column(
-            modifier = modifier
-        ) {
-            Image (
-                painter = painterResource(R.drawable.ic_launcher_background),
-                contentDescription = null
-            )
-            Column (
-                modifier = modifier,
-            ) {
-                Text(
-                    text = "",
-                )
-                Text(
-                    text = "",
-                )
-            }
-            Row() {
 
-            }
+
+
+
+data class Artwork(val imageResId: Int, val title: String, val artist: String, val year: Int)
+
+@Composable
+fun ArtSpaceApp() {
+    var currentIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+
+    val artworks = listOf(
+        Artwork(R.drawable.ic_launcher_background, "Sailing Under the Bridge", "Kat Kuan", 2017),
+        Artwork(R.drawable.ic_launcher_background, "Misty Mountains", "John Doe", 2020),
+        Artwork(R.drawable.ic_launcher_background, "Golden Sunrise", "Jane Smith", 2019)
+    )
+
+    // Определяем, в каком режиме отображается экран: портретном или альбомном
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // В зависимости от ориентации экрана выбираем макет
+    if (isLandscape) {
+        LandscapeLayout(artworks = artworks, currentIndex = currentIndex) { newIndex ->
+            currentIndex = newIndex
+        }
+    } else {
+        PortraitLayout(artworks = artworks, currentIndex = currentIndex) { newIndex ->
+            currentIndex = newIndex
         }
     }
 }
 
-fun foo() {
+@Composable
+fun PortraitLayout(artworks: List<Artwork>, currentIndex: Int, onIndexChange: (Int) -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        DisplayArtwork(
+            artwork = artworks[currentIndex],
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)  // 70% высоты экрана
+        )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Кнопки управления в портретном режиме
+        NavigationButtons(
+            artworks = artworks,
+            currentIndex = currentIndex,
+            onIndexChange = onIndexChange,
+            modifier = Modifier.weight(0.3f)  // 30% высоты экрана
+        )
+    }
 }
-
-data class Artwork(val imageResId: Int, val title: String, val artist: String, val year: Int)
 
 @Composable
 fun LandscapeLayout(
@@ -166,30 +200,27 @@ fun NavigationButtons(
             .padding(16.dp)
     ) {
         Button(onClick = {
-            foo()
+            onIndexChange((currentIndex - 1 + artworks.size) % artworks.size)
         }) {
             Text("Previous")
         }
         Button(onClick = {
-            foo()
+            onIndexChange((currentIndex + 1) % artworks.size)
         }) {
             Text("Next")
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
 
-@Preview(showBackground = true)
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true,
+)
 @Composable
 fun GreetingPreview() {
     ArtSpaceTheme {
-        Greeting("Android")
+        ArtSpaceApp()
     }
 }
